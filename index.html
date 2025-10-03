@@ -423,31 +423,45 @@
                 throw new Error(`Only ${allQuestions.length} questions available`);
             }
             
+            // Debug: Log the first question to see column names
+            console.log('First row data:', allQuestions[0]);
+            console.log('All keys:', Object.keys(allQuestions[0]));
+            
             // Shuffle and select questions
             const shuffled = allQuestions.sort(() => Math.random() - 0.5);
             currentQuiz = shuffled.slice(0, numQuestions).map(q => {
-                // Parse the question
-                const choices = [
-                    { text: q['Column C'] || q['C'] || '', correct: false },
-                    { text: q['Column D'] || q['D'] || '', correct: false },
-                    { text: q['Column E'] || q['E'] || '', correct: false },
-                    { text: q['Column F'] || q['F'] || '', correct: false }
-                ].filter(c => c.text);
+                // Get all possible column names
+                const keys = Object.keys(q);
                 
-                const correctLetter = (q['Column G'] || q['G'] || '').toString().toUpperCase().trim();
+                // Try to find the question (usually column B or index 1)
+                const questionText = q[keys[1]] || q['question'] || q['Question'] || '';
+                
+                // Try to find options (columns C, D, E, F or indices 2,3,4,5)
+                const choices = [
+                    { text: q[keys[2]] || '', correct: false },
+                    { text: q[keys[3]] || '', correct: false },
+                    { text: q[keys[4]] || '', correct: false },
+                    { text: q[keys[5]] || '', correct: false }
+                ].filter(c => c.text && c.text.trim() !== '');
+                
+                // Try to find correct answer (column G or index 6)
+                const correctLetter = (q[keys[6]] || '').toString().toUpperCase().trim();
                 const correctIndex = correctLetter.charCodeAt(0) - 65; // A=0, B=1, C=2, D=3
                 
                 if (correctIndex >= 0 && correctIndex < choices.length) {
                     choices[correctIndex].correct = true;
                 }
                 
+                // Try to find points (column H or index 7)
+                const points = parseInt(q[keys[7]] || '1') || 1;
+                
                 // Shuffle choices
                 choices.sort(() => Math.random() - 0.5);
                 
                 return {
-                    question: q['Column B'] || q['B'] || '',
+                    question: questionText,
                     choices: choices,
-                    points: parseInt(q['Column H'] || q['H'] || '1'),
+                    points: points,
                     answered: false,
                     selectedIndex: null,
                     isCorrect: false
