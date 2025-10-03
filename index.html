@@ -28,9 +28,9 @@
             <div class="space-y-4">
                 <label for="subject-select" class="block text-sm font-medium text-gray-700">Select Subject (Sheet Name):</label>
                 <select id="subject-select" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150">
+                    <!-- Updated to only show the confirmed tab names -->
                     <option value="Physics">Physics</option>
                     <option value="Chemistry">Chemistry</option>
-                    <!-- Add more subjects here if you add more tabs to your sheet -->
                 </select>
             </div>
 
@@ -298,7 +298,7 @@
 
             } catch (error) {
                 console.error("Fetch/Processing error:", error);
-                displayMessage(`Error: Could not fetch data from Google Sheets for subject "${subject}". Please ensure the sheet is published and the ID is correct.`, 'error');
+                displayMessage(`Error: Could not fetch data from Google Sheets for subject "${subject}". Please ensure the sheet is published, the ID is correct, and the sheet name matches a tab exactly.`, 'error');
             } finally {
                 startQuizButton.textContent = 'Start Quiz';
                 startQuizButton.disabled = false;
