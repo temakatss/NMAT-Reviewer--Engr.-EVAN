@@ -4,67 +4,58 @@
   <meta charset="UTF-8">
   <title>Quiz App</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    .question-box { margin-bottom: 20px; border: 1px solid #ccc; padding: 15px; border-radius: 5px; }
+    body { 
+      font-family: Arial, sans-serif; 
+      padding: 20px; 
+    }
+    .question-box { 
+      margin-bottom: 20px; 
+      border: 1px solid #007bff; 
+      padding: 15px; 
+      border-radius: 5px;
+    }
     button { 
       display: block; 
       margin: 8px 0; 
       padding: 10px; 
       width: 250px; 
-      text-align: left;
       cursor: pointer;
-      border: 1px solid #007bff;
-      background-color: #f8f9fa;
-      color: #007bff;
-      transition: background-color 0.3s;
+      text-align: left;
     }
-    button:hover {
-      background-color: #007bff;
-      color: white;
+    #score { 
+      font-weight: bold; 
+      margin-top: 20px; 
+      font-size: 1.2em; 
+      color: #28a745;
     }
-    #score { font-weight: bold; margin-top: 20px; font-size: 1.2em; color: #28a745; }
-    #quiz-message { margin-top: 10px; padding: 10px; border-radius: 3px; }
-    .correct { background-color: #d4edda; color: #155724; border-color: #c3e6cb; }
-    .incorrect { background-color: #f8d7da; color: #721c24; border-color: #f5c6cb; }
   </style>
 </head>
 <body>
-  <h2>Interactive Quiz</h2>
+  <h2>Quiz App</h2>
   <div id="quiz"></div>
-  <div id="quiz-message"></div>
-  <hr>
   <div id="score"></div>
 
   <script>
-    // Sample questions (mimicking a structured data source like a Google Sheet)
+    // Sample questions (mimics your data structure)
     const questions = [
       {
         number: "1",
         question: "What is 2 + 2?",
         choices: ["2", "3", "4", "5"],
-        answer: "C", // Column G (A-D)
-        points: 1     // Changed to number for easier math
+        answer: "C", // Corresponds to index 2 (the choice "4")
+        points: "1"  
       },
       {
         number: "2",
         question: "Capital of France?",
         choices: ["Berlin", "Madrid", "Paris", "Rome"],
-        answer: "C",
-        points: 1
-      },
-      {
-        number: "3",
-        question: "The chemical symbol for water is...",
-        choices: ["O2", "H2O", "CO2", "NaCl"],
-        answer: "B",
-        points: 2
+        answer: "C", // Corresponds to index 2 (the choice "Paris")
+        points: "1"
       }
     ];
 
     let currentQuestionIndex = 0;
     let score = 0;
-
-    // --- Core Functions ---
 
     /**
      * Finds the correct choice text based on the answer letter (A, B, C, D).
@@ -73,60 +64,24 @@
      */
     function getCorrectAnswerText(question) {
       const answerMap = { "A": 0, "B": 1, "C": 2, "D": 3 };
-      const correctIndex = answerMap[question.answer.toUpperCase()];
+      // Ensure the answer letter is uppercase for lookup robustness
+      const correctIndex = answerMap[question.answer.toUpperCase()]; 
       
-      // Basic validation to prevent errors if answer code is bad
-      if (correctIndex === undefined || correctIndex >= question.choices.length) {
-        console.error("Invalid answer code or choices array:", question);
-        return "Error: Could not determine correct answer.";
-      }
-      return question.choices[correctIndex];
+      // Return the choice text, or an error string if the index is invalid
+      return question.choices[correctIndex] || "Error: Correct Answer Missing";
     }
-    
-    /**
-     * Handles the user's choice and updates the score.
-     * @param {string} selectedChoiceText - The text of the choice the user clicked.
-     */
-    function handleAnswer(selectedChoiceText) {
-      const q = questions[currentQuestionIndex];
-      const correctAnswerText = getCorrectAnswerText(q);
-      const messageDiv = document.getElementById("quiz-message");
 
-      if (selectedChoiceText === correctAnswerText) {
-        // Correct Answer Logic
-        score += q.points;
-        messageDiv.className = 'correct';
-        messageDiv.textContent = `✅ Correct! You earned ${q.points} points.`;
-      } else {
-        // Incorrect Answer Logic
-        messageDiv.className = 'incorrect';
-        messageDiv.textContent = `❌ Wrong! The correct answer was: "${correctAnswerText}".`;
-      }
-      
-      // Delay before showing next question to allow user to see the feedback
-      // We disable all buttons first to prevent multiple clicks
-      document.querySelectorAll('#quiz button').forEach(btn => btn.disabled = true);
-      
-      setTimeout(() => {
-        currentQuestionIndex++;
-        messageDiv.textContent = ''; // Clear message
-        messageDiv.className = ''; // Clear class
-        showQuestion();
-      }, 1500); // Wait 1.5 seconds
-    }
-    
-    /**
-     * Renders the current question to the DOM or displays the final score.
-     */
     function showQuestion() {
       const quizDiv = document.getElementById("quiz");
-      const scoreDiv = document.getElementById("score");
-      scoreDiv.textContent = "Score: " + score;
-      quizDiv.innerHTML = ""; // Clear previous content
+      quizDiv.innerHTML = "";
+      
+      // Update score display at the start of the function
+      document.getElementById("score").textContent = "Current Score: " + score;
 
+      // --- Quiz Finished Check ---
       if (currentQuestionIndex >= questions.length) {
-        // Quiz finished
-        quizDiv.innerHTML = `<h3>🎉 Quiz finished! 🎉</h3><p>Your final score is: <span style="color:#007bff; font-size:1.5em;">${score}</span> out of a possible ${questions.reduce((sum, q) => sum + q.points, 0)}.</p>`;
+        quizDiv.innerHTML = "<h3>Quiz finished! 🎉</h3>";
+        document.getElementById("score").textContent = "Final Score: " + score + " points!";
         return;
       }
 
@@ -134,27 +89,43 @@
       const qBox = document.createElement("div");
       qBox.className = "question-box";
 
+      // Display question
       const qText = document.createElement("h3");
       qText.textContent = q.number + ". " + q.question;
       qBox.appendChild(qText);
 
-      // Create buttons for choices
+      // --- Correct Answer Logic ---
+      const correctAnswerText = getCorrectAnswerText(q);
+
+      // Create buttons for each choice
       q.choices.forEach((choiceText, i) => {
         const btn = document.createElement("button");
-        // Prepend choice letters (A, B, C, D) to the button text for clarity
-        const choiceLetter = String.fromCharCode(65 + i); // 65 is 'A'
+        const choiceLetter = String.fromCharCode(65 + i); // A, B, C, D
+        
         btn.textContent = `${choiceLetter}. ${choiceText}`;
         
-        // Pass the actual choice text to the handler
-        btn.onclick = () => handleAnswer(choiceText);
-        
+        btn.onclick = () => {
+          // Compare the clicked choice's text with the calculated correct answer text
+          if (choiceText === correctAnswerText) {
+            alert("✅ Correct!");
+            // Ensure points are parsed as an integer before adding
+            score += parseInt(q.points, 10);
+          } else {
+            // Provide the correct answer text on a wrong choice
+            alert("❌ Wrong! The correct answer was: " + correctAnswerText);
+          }
+          
+          // Move to the next question and re-render
+          currentQuestionIndex++;
+          showQuestion();
+        };
         qBox.appendChild(btn);
       });
 
       quizDiv.appendChild(qBox);
     }
-
-    // --- Start quiz ---
+    
+    // Start quiz
     showQuestion();
   </script>
 </body>
