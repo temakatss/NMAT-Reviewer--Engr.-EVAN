@@ -79,6 +79,21 @@
       document.getElementById("score").textContent = "Score: " + score;
     }
 
+    function checkAnswer(selectedChoice, question) {
+  // Column G already contains the full correct answer text
+  const correctAnswerText = question.answer.trim().toLowerCase();
+  const selectedText = selectedChoice.trim().toLowerCase();
+
+  if (selectedText === correctAnswerText) {
+    console.log("✅ Correct");
+    return { correct: true, message: "✅ Correct!" };
+  } else {
+    console.log("❌ Wrong. Correct answer: " + question.answer);
+    return { correct: false, message: "❌ Wrong! Correct answer: " + question.answer };
+  }
+}
+
+    
     // Start quiz
     showQuestion();
   </script>
