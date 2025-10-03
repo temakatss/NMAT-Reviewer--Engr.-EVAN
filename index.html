@@ -429,29 +429,28 @@
                 // Use exact column names from your sheet
                 const questionText = q['Question'] || '';
                 
-                // Get all four choices
-                const choices = [
-                    { text: q['A'] || '', correct: false },
-                    { text: q['B'] || '', correct: false },
-                    { text: q['C'] || '', correct: false },
-                    { text: q['D'] || '', correct: false }
-                ].filter(c => c.text && c.text.trim() !== '');
-                
-                // Get correct answer (should be 'A', 'B', 'C', or 'D')
+                // Get correct answer FIRST (should be 'A', 'B', 'C', or 'D')
                 const correctLetter = (q['Ans'] || '').toString().toUpperCase().trim();
                 
-                // Mark the correct choice
-                choices.forEach((choice, index) => {
-                    const choiceLetter = String.fromCharCode(65 + index); // 0='A', 1='B', etc.
-                    if (choiceLetter === correctLetter) {
-                        choice.correct = true;
-                    }
-                });
+                // Get the actual text of the correct answer based on the letter
+                let correctAnswerText = '';
+                if (correctLetter === 'A') correctAnswerText = q['A'] || '';
+                else if (correctLetter === 'B') correctAnswerText = q['B'] || '';
+                else if (correctLetter === 'C') correctAnswerText = q['C'] || '';
+                else if (correctLetter === 'D') correctAnswerText = q['D'] || '';
+                
+                // Create all four choices with the correct answer marked by TEXT not position
+                const choices = [
+                    { text: q['A'] || '', correct: (q['A'] === correctAnswerText) },
+                    { text: q['B'] || '', correct: (q['B'] === correctAnswerText) },
+                    { text: q['C'] || '', correct: (q['C'] === correctAnswerText) },
+                    { text: q['D'] || '', correct: (q['D'] === correctAnswerText) }
+                ].filter(c => c.text && c.text.trim() !== '');
                 
                 // Get points
                 const points = parseInt(q['points'] || '1') || 1;
                 
-                // Shuffle choices
+                // Shuffle choices - the correct flag stays with the text
                 choices.sort(() => Math.random() - 0.5);
                 
                 return {
@@ -460,7 +459,8 @@
                     points: points,
                     answered: false,
                     selectedIndex: null,
-                    isCorrect: false
+                    isCorrect: false,
+                    correctAnswerText: correctAnswerText
                 };
             });
             
