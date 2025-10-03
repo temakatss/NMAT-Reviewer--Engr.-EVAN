@@ -1,132 +1,480 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Quiz App</title>
-  <style>
-    body { 
-      font-family: Arial, sans-serif; 
-      padding: 20px; 
-    }
-    .question-box { 
-      margin-bottom: 20px; 
-      border: 1px solid #007bff; 
-      padding: 15px; 
-      border-radius: 5px;
-    }
-    button { 
-      display: block; 
-      margin: 8px 0; 
-      padding: 10px; 
-      width: 250px; 
-      cursor: pointer;
-      text-align: left;
-    }
-    #score { 
-      font-weight: bold; 
-      margin-top: 20px; 
-      font-size: 1.2em; 
-      color: #28a745;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sheet Quiz PWA</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f7fafc; }
+        .card { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+    </style>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" id="pwa-manifest" href="data:application/json;base64,eyJpY29ucyI6IFt7InNyYyI6ICJodHRwczovL3BsYWNlaG9sZC5jby8xOTJ4MTkyLzIzNGFiYy9mZmYifSwgeyJzcmMiOiAiaHR0cHM6Ly9wbGFjZWhvbGQuY28vNTEyeDUxMi8yMzRhYmMvZmZmIiwgInNpemVzIjogIjUxMng1MTIifV0sICJuYW1lIjogIlNoZWV0IFF1aXogQVBOIiwgInNob3J0X25hbWUiOiAiUXVpeiIsICJzdGFydF91cmwiOiAiLi8iLCAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwgImJhY2tncm91bmRfY29sb3IiOiAiIzIzNGFiYyIsICJ0aGVtZV9jb2xvciI6ICIjMzM2NGRhIn0=">
 </head>
-<body>
-  <h2>Quiz App</h2>
-  <div id="quiz"></div>
-  <div id="score"></div>
+<body class="min-h-screen p-4 md:p-8 flex items-center justify-center">
 
-  <script>
-    // Sample questions (mimics your data structure)
-    const questions = [
-      {
-        number: "1",
-        question: "What is 2 + 2?",
-        choices: ["2", "3", "4", "5"],
-        answer: "C", // Corresponds to index 2 (the choice "4")
-        points: "1"  
-      },
-      {
-        number: "2",
-        question: "Capital of France?",
-        choices: ["Berlin", "Madrid", "Paris", "Rome"],
-        answer: "C", // Corresponds to index 2 (the choice "Paris")
-        points: "1"
-      }
-    ];
+    <div id="app" class="w-full max-w-2xl bg-white rounded-xl card p-6 md:p-10 transition-all duration-300">
+        <h1 class="text-3xl font-bold text-center mb-6 text-gray-800">The Sheet Quiz App</h1>
 
-    let currentQuestionIndex = 0;
-    let score = 0;
+        <!-- Configuration Screen -->
+        <div id="config-screen" class="space-y-6">
+            <p class="text-gray-600 text-center">Configure your quiz from your Google Sheet.</p>
+            
+            <div class="space-y-4">
+                <label for="subject-select" class="block text-sm font-medium text-gray-700">Select Subject (Sheet Name):</label>
+                <select id="subject-select" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150">
+                    <option value="Physics">Physics</option>
+                    <option value="Chemistry">Chemistry</option>
+                    <!-- Add more subjects here if you add more tabs to your sheet -->
+                </select>
+            </div>
 
-    /**
-     * Finds the correct choice text based on the answer letter (A, B, C, D).
-     * @param {object} question - The current question object.
-     * @returns {string} The text of the correct answer choice.
-     */
-    function getCorrectAnswerText(question) {
-      const answerMap = { "A": 0, "B": 1, "C": 2, "D": 3 };
-      // Ensure the answer letter is uppercase for lookup robustness
-      const correctIndex = answerMap[question.answer.toUpperCase()]; 
-      
-      // Return the choice text, or an error string if the index is invalid
-      return question.choices[correctIndex] || "Error: Correct Answer Missing";
-    }
+            <div class="space-y-4">
+                <label for="question-count" class="block text-sm font-medium text-gray-700">Number of Questions (10-100):</label>
+                <input type="number" id="question-count" min="10" max="100" value="10" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150">
+            </div>
 
-    function showQuestion() {
-      const quizDiv = document.getElementById("quiz");
-      quizDiv.innerHTML = "";
-      
-      // Update score display at the start of the function
-      document.getElementById("score").textContent = "Current Score: " + score;
+            <button id="start-quiz-button" class="w-full py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition duration-200 focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:ring-opacity-50">
+                Start Quiz
+            </button>
+        </div>
 
-      // --- Quiz Finished Check ---
-      if (currentQuestionIndex >= questions.length) {
-        quizDiv.innerHTML = "<h3>Quiz finished! 🎉</h3>";
-        document.getElementById("score").textContent = "Final Score: " + score + " points!";
-        return;
-      }
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="hidden">
+            <div id="progress" class="mb-6">
+                <p class="text-sm font-medium text-gray-600 mb-2">Question <span id="current-q-number">1</span> of <span id="total-q-count">10</span></p>
+                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div id="progress-bar" class="bg-indigo-500 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+            </div>
 
-      const q = questions[currentQuestionIndex];
-      const qBox = document.createElement("div");
-      qBox.className = "question-box";
+            <div id="question-area" class="bg-indigo-50 p-5 rounded-lg mb-6">
+                <p id="question-text" class="text-lg font-medium text-gray-800"></p>
+            </div>
 
-      // Display question
-      const qText = document.createElement("h3");
-      qText.textContent = q.number + ". " + q.question;
-      qBox.appendChild(qText);
+            <div id="options-area" class="space-y-3">
+                <!-- Options will be dynamically injected here -->
+            </div>
+            
+            <div id="feedback-message" class="mt-4 p-3 rounded-lg text-sm hidden font-medium"></div>
 
-      // --- Correct Answer Logic ---
-      const correctAnswerText = getCorrectAnswerText(q);
+            <button id="next-button" class="mt-6 w-full py-3 bg-gray-400 text-white font-semibold rounded-lg transition duration-200 cursor-not-allowed" disabled>
+                Next Question
+            </button>
+        </div>
 
-      // Create buttons for each choice
-      q.choices.forEach((choiceText, i) => {
-        const btn = document.createElement("button");
-        const choiceLetter = String.fromCharCode(65 + i); // A, B, C, D
+        <!-- Score Screen -->
+        <div id="score-screen" class="hidden text-center">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Quiz Complete!</h2>
+            <div class="inline-block p-6 bg-green-100 rounded-xl">
+                <p class="text-6xl font-extrabold text-green-600" id="final-score">0%</p>
+                <p class="text-xl text-gray-700 mt-2">Score: <span id="correct-count">0</span> / <span id="total-answered">0</span></p>
+            </div>
+            
+            <button id="retake-quiz-button" class="mt-6 w-full py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition duration-200">
+                Start New Quiz
+            </button>
+        </div>
+
+        <!-- Loading/Error Message -->
+        <div id="message-area" class="hidden p-4 rounded-lg text-center font-medium mt-4"></div>
+    </div>
+
+    <script>
+        // --- Configuration & State ---
+        // The ID extracted from your published URL
+        const SPREADSHEET_ID = "2PACX-1vT-5qscey85xp3yH3Be_GOIhX9z1EcdhpCjQ94acwr_CyRP4To_TT3h6NJhi0bWuAl8DYuBum5kGNLO"; 
+        const BASE_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=`;
+
+        let questions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let isAnswered = false;
+
+        // --- DOM Elements ---
+        const configScreen = document.getElementById('config-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const scoreScreen = document.getElementById('score-screen');
+        const messageArea = document.getElementById('message-area');
         
-        btn.textContent = `${choiceLetter}. ${choiceText}`;
-        
-        btn.onclick = () => {
-          // Compare the clicked choice's text with the calculated correct answer text
-          if (choiceText === correctAnswerText) {
-            alert("✅ Correct!");
-            // Ensure points are parsed as an integer before adding
-            score += parseInt(q.points, 10);
-          } else {
-            // Provide the correct answer text on a wrong choice
-            alert("❌ Wrong! The correct answer was: " + correctAnswerText);
-          }
-          
-          // Move to the next question and re-render
-          currentQuestionIndex++;
-          showQuestion();
-        };
-        qBox.appendChild(btn);
-      });
+        const subjectSelect = document.getElementById('subject-select');
+        const questionCountInput = document.getElementById('question-count');
+        const startQuizButton = document.getElementById('start-quiz-button');
+        const retakeQuizButton = document.getElementById('retake-quiz-button');
+        const nextButton = document.getElementById('next-button');
 
-      quizDiv.appendChild(qBox);
-    }
-    
-    // Start quiz
-    showQuestion();
-  </script>
+        const questionText = document.getElementById('question-text');
+        const optionsArea = document.getElementById('options-area');
+        const feedbackMessage = document.getElementById('feedback-message');
+        const currentQNumber = document.getElementById('current-q-number');
+        const totalQCount = document.getElementById('total-q-count');
+        const progressBar = document.getElementById('progress-bar');
+
+        // --- Event Listeners ---
+        startQuizButton.addEventListener('click', startQuiz);
+        retakeQuizButton.addEventListener('click', resetApp);
+        nextButton.addEventListener('click', handleNextQuestion);
+
+        // Allow selection before start
+        optionsArea.addEventListener('click', (e) => {
+            if (e.target.classList.contains('option-button') && !isAnswered) {
+                checkAnswer(e.target);
+            }
+        });
+
+        // --- Utility Functions ---
+
+        /**
+         * Displays a temporary message (error or success).
+         * @param {string} message - The message text.
+         * @param {string} type - 'error' or 'success'.
+         */
+        function displayMessage(message, type) {
+            messageArea.textContent = message;
+            messageArea.className = 'p-4 rounded-lg text-center font-medium mt-4'; // Reset classes
+            messageArea.classList.remove('hidden');
+
+            if (type === 'error') {
+                messageArea.classList.add('bg-red-100', 'text-red-700');
+            } else if (type === 'success') {
+                messageArea.classList.add('bg-green-100', 'text-green-700');
+            } else {
+                messageArea.classList.add('bg-gray-100', 'text-gray-700');
+            }
+        }
+        
+        /**
+         * Shuffles an array in place using the Fisher-Yates algorithm.
+         * @param {Array} a - The array to shuffle.
+         */
+        function shuffleArray(a) {
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        /**
+         * Cleans and parses the Google Sheets JSON response.
+         * @param {string} tqJson - The raw JSON string from Google Sheets.
+         * @returns {Array<Object>} - An array of structured question objects.
+         */
+        function parseSheetData(tqJson) {
+            try {
+                // The Google Sheets API response is wrapped: `google.visualization.Query.setResponse(...)`
+                const jsonText = tqJson.substring(tqJson.indexOf('{'), tqJson.lastIndexOf('}') + 1);
+                const data = JSON.parse(jsonText);
+                const rows = data.table.rows;
+                const parsedQuestions = [];
+
+                rows.forEach(row => {
+                    const cells = row.c;
+                    // Skip if the first cell (Question Text) is null or empty
+                    if (!cells[0] || !cells[0].v) return; 
+
+                    // Ensure all required cells are present and extract the data
+                    // Expected columns: A=Question, B=Option 1, C=Option 2, D=Option 3, E=Option 4, F=Answer Key (A, B, C, or D)
+                    const question = cells[0]?.v || '';
+                    const optionA = cells[1]?.v || '';
+                    const optionB = cells[2]?.v || '';
+                    const optionC = cells[3]?.v || '';
+                    const optionD = cells[4]?.v || '';
+                    const correctAnswerLabel = cells[5]?.v?.toUpperCase() || '';
+                    
+                    if (question && optionA && optionB && optionC && optionD && ['A', 'B', 'C', 'D'].includes(correctAnswerLabel)) {
+                        
+                        const options = shuffleArray([
+                            { label: 'A', text: optionA },
+                            { label: 'B', text: optionB },
+                            { label: 'C', text: optionC },
+                            { label: 'D', text: optionD }
+                        ]);
+
+                        // Determine the correct answer text based on the label (A, B, C, D)
+                        let correctText;
+                        switch(correctAnswerLabel) {
+                            case 'A': correctText = optionA; break;
+                            case 'B': correctText = optionB; break;
+                            case 'C': correctText = optionC; break;
+                            case 'D': correctText = optionD; break;
+                        }
+
+                        parsedQuestions.push({
+                            question: question,
+                            options: options,
+                            correctAnswer: correctAnswerLabel,
+                            correctAnswerText: correctText
+                        });
+                    }
+                });
+
+                return parsedQuestions;
+
+            } catch (error) {
+                console.error("Error parsing sheet data:", error);
+                displayMessage("Error: Could not parse sheet data. Check your Sheet ID, sheet name, and column structure (A-Question, B-E-Options, F-Answer Key).", 'error');
+                return [];
+            }
+        }
+
+        // --- Quiz Logic ---
+
+        /** Fetches questions from the Google Sheet and starts the quiz. */
+        async function startQuiz() {
+            // No need for placeholder check, ID is hardcoded now.
+
+            const subject = subjectSelect.value;
+            let count = parseInt(questionCountInput.value);
+
+            if (isNaN(count) || count < 10 || count > 100) {
+                displayMessage("Error: Please enter a valid question count between 10 and 100.", 'error');
+                return;
+            }
+            
+            // Show loading state
+            startQuizButton.textContent = 'Loading...';
+            startQuizButton.disabled = true;
+            messageArea.classList.add('hidden');
+
+            const sheetUrl = `${BASE_URL}${subject}`;
+
+            try {
+                // Implementing exponential backoff for the fetch request
+                let response = null;
+                const maxRetries = 3;
+                for (let i = 0; i < maxRetries; i++) {
+                    try {
+                        response = await fetch(sheetUrl);
+                        if (response.ok) break; // Success
+                    } catch (e) {
+                        console.warn(`Fetch attempt ${i + 1} failed. Retrying...`);
+                    }
+                    if (i < maxRetries - 1) {
+                        const delay = Math.pow(2, i) * 1000; // 1s, 2s, 4s
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                    }
+                }
+
+                if (!response || !response.ok) {
+                    throw new Error("Failed to fetch data after multiple retries.");
+                }
+
+
+                const text = await response.text();
+
+                questions = parseSheetData(text);
+                
+                if (questions.length === 0) {
+                    displayMessage(`Error: No valid questions found in the sheet '${subject}'. Ensure your sheet is public and data is correctly formatted (A-Question, B-E-Options, F-Answer Key).`, 'error');
+                    startQuizButton.textContent = 'Start Quiz';
+                    startQuizButton.disabled = false;
+                    return;
+                }
+
+                // Limit count to available questions
+                count = Math.min(count, questions.length);
+
+                // Shuffle all questions and select the required number
+                questions = shuffleArray(questions).slice(0, count);
+                
+                // Initialize quiz state
+                currentQuestionIndex = 0;
+                score = 0;
+
+                // Update UI to quiz screen
+                configScreen.classList.add('hidden');
+                scoreScreen.classList.add('hidden');
+                quizScreen.classList.remove('hidden');
+
+                totalQCount.textContent = questions.length;
+                
+                displayQuestion();
+
+            } catch (error) {
+                console.error("Fetch/Processing error:", error);
+                displayMessage(`Error: Could not fetch data from Google Sheets for subject "${subject}". Please ensure the sheet is published and the ID is correct.`, 'error');
+            } finally {
+                startQuizButton.textContent = 'Start Quiz';
+                startQuizButton.disabled = false;
+            }
+        }
+
+        /** Displays the current question and options. */
+        function displayQuestion() {
+            const q = questions[currentQuestionIndex];
+            isAnswered = false;
+            
+            // Reset UI elements
+            feedbackMessage.classList.add('hidden');
+            optionsArea.innerHTML = '';
+            nextButton.disabled = true;
+            nextButton.classList.replace('bg-indigo-600', 'bg-gray-400');
+            nextButton.classList.add('cursor-not-allowed');
+            nextButton.textContent = 'Next Question';
+
+            // Update question number and progress
+            currentQNumber.textContent = currentQuestionIndex + 1;
+            const progressPercent = ((currentQuestionIndex) / questions.length) * 100;
+            progressBar.style.width = `${progressPercent}%`;
+
+            questionText.textContent = q.question;
+
+            // Display options
+            q.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.textContent = `${option.label}) ${option.text}`;
+                button.dataset.answer = option.label; // Store the letter (A, B, C, D)
+                // Use a darker hover state for options
+                button.className = 'option-button w-full text-left p-3 border border-gray-300 rounded-lg hover:bg-indigo-50 transition duration-150 text-gray-800 bg-white shadow-sm';
+                optionsArea.appendChild(button);
+            });
+        }
+
+        /**
+         * Checks the user's selected answer.
+         * @param {HTMLElement} selectedButton - The button the user clicked.
+         */
+        function checkAnswer(selectedButton) {
+            if (isAnswered) return;
+            isAnswered = true;
+
+            const selectedAnswer = selectedButton.dataset.answer;
+            const correctAnswer = questions[currentQuestionIndex].correctAnswer;
+            const correctAnswerText = questions[currentQuestionIndex].correctAnswerText;
+
+            // Highlight all options to prevent further clicking and reset hover styles
+            Array.from(optionsArea.children).forEach(btn => {
+                btn.classList.remove('hover:bg-indigo-50');
+                btn.classList.add('cursor-default');
+            });
+
+            if (selectedAnswer === correctAnswer) {
+                // Correct Answer
+                score++;
+                selectedButton.classList.replace('bg-white', 'bg-green-500');
+                selectedButton.classList.replace('text-gray-800', 'text-white');
+                selectedButton.classList.replace('border-gray-300', 'border-green-600');
+                feedbackMessage.textContent = "Correct! Well done.";
+                feedbackMessage.classList.remove('hidden');
+                feedbackMessage.classList.add('bg-green-100', 'text-green-700');
+            } else {
+                // Wrong Answer
+                selectedButton.classList.replace('bg-white', 'bg-red-500');
+                selectedButton.classList.replace('text-gray-800', 'text-white');
+                selectedButton.classList.replace('border-gray-300', 'border-red-600');
+                
+                // Find and highlight the correct answer
+                const correctButton = Array.from(optionsArea.children).find(btn => btn.dataset.answer === correctAnswer);
+                if (correctButton) {
+                    // Highlight correct answer in a light green
+                    correctButton.classList.replace('bg-white', 'bg-green-100');
+                    correctButton.classList.replace('text-gray-800', 'text-green-800');
+                    correctButton.classList.replace('border-gray-300', 'border-green-300');
+                }
+
+                feedbackMessage.textContent = `Incorrect. The correct answer was: ${correctAnswerText}`;
+                feedbackMessage.classList.remove('hidden');
+                feedbackMessage.classList.add('bg-red-100', 'text-red-700');
+            }
+
+            // Enable next button
+            nextButton.disabled = false;
+            nextButton.classList.replace('bg-gray-400', 'bg-indigo-600');
+            nextButton.classList.remove('cursor-not-allowed');
+            nextButton.textContent = currentQuestionIndex === questions.length - 1 ? 'Show Score' : 'Next Question';
+        }
+
+        /** Moves to the next question or shows the score. */
+        function handleNextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                displayQuestion();
+            } else {
+                showScore();
+            }
+        }
+
+        /** Displays the final score screen. */
+        function showScore() {
+            const total = questions.length;
+            const percentage = total > 0 ? ((score / total) * 100).toFixed(1) : 0;
+
+            document.getElementById('final-score').textContent = `${percentage}%`;
+            document.getElementById('correct-count').textContent = score;
+            document.getElementById('total-answered').textContent = total;
+
+            quizScreen.classList.add('hidden');
+            scoreScreen.classList.remove('hidden');
+
+            // Final progress bar update
+            progressBar.style.width = '100%';
+        }
+
+        /** Resets the app to the configuration screen. */
+        function resetApp() {
+            scoreScreen.classList.add('hidden');
+            quizScreen.classList.add('hidden');
+            configScreen.classList.remove('hidden');
+            messageArea.classList.add('hidden');
+        }
+
+        // --- PWA Service Worker Registration ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                // Define the Service Worker script content as a blob
+                const swCode = `
+                    const CACHE_NAME = 'sheet-quiz-cache-v2'; // Updated cache version
+                    const urlsToCache = [
+                        '/',
+                        'https://cdn.tailwindcss.com',
+                        'https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap',
+                    ];
+
+                    self.addEventListener('install', event => {
+                        event.waitUntil(
+                            caches.open(CACHE_NAME)
+                                .then(cache => {
+                                    return cache.addAll(urlsToCache);
+                                })
+                        );
+                    });
+
+                    self.addEventListener('fetch', event => {
+                        // Cache-first strategy for requested assets
+                        event.respondWith(
+                            caches.match(event.request)
+                                .then(response => {
+                                    if (response) {
+                                        return response;
+                                    }
+                                    return fetch(event.request);
+                                })
+                        );
+                    });
+                `;
+                
+                // Create a Blob and a URL for the Service Worker script
+                const blob = new Blob([swCode], { type: 'application/javascript' });
+                const swUrl = URL.createObjectURL(blob);
+
+                // Register the Service Worker
+                navigator.serviceWorker.register(swUrl)
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('ServiceWorker registration failed: ', error);
+                        // NOTE: In single-file HTML, this often fails due to scope limitations. 
+                        // For a reliable PWA, sw.js should be a separate file at the root.
+                    });
+            });
+        }
+    </script>
 </body>
 </html>
