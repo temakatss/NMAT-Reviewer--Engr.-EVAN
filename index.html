@@ -423,37 +423,33 @@
                 throw new Error(`Only ${allQuestions.length} questions available`);
             }
             
-            // Debug: Log the first question to see column names
-            console.log('First row data:', allQuestions[0]);
-            console.log('All keys:', Object.keys(allQuestions[0]));
-            
             // Shuffle and select questions
             const shuffled = allQuestions.sort(() => Math.random() - 0.5);
             currentQuiz = shuffled.slice(0, numQuestions).map(q => {
-                // Get all possible column names
-                const keys = Object.keys(q);
+                // Use exact column names from your sheet
+                const questionText = q['Question'] || '';
                 
-                // Try to find the question (usually column B or index 1)
-                const questionText = q[keys[1]] || q['question'] || q['Question'] || '';
-                
-                // Try to find options (columns C, D, E, F or indices 2,3,4,5)
+                // Get all four choices
                 const choices = [
-                    { text: q[keys[2]] || '', correct: false },
-                    { text: q[keys[3]] || '', correct: false },
-                    { text: q[keys[4]] || '', correct: false },
-                    { text: q[keys[5]] || '', correct: false }
+                    { text: q['A'] || '', correct: false },
+                    { text: q['B'] || '', correct: false },
+                    { text: q['C'] || '', correct: false },
+                    { text: q['D'] || '', correct: false }
                 ].filter(c => c.text && c.text.trim() !== '');
                 
-                // Try to find correct answer (column G or index 6)
-                const correctLetter = (q[keys[6]] || '').toString().toUpperCase().trim();
-                const correctIndex = correctLetter.charCodeAt(0) - 65; // A=0, B=1, C=2, D=3
+                // Get correct answer (should be 'A', 'B', 'C', or 'D')
+                const correctLetter = (q['Ans'] || '').toString().toUpperCase().trim();
                 
-                if (correctIndex >= 0 && correctIndex < choices.length) {
-                    choices[correctIndex].correct = true;
-                }
+                // Mark the correct choice
+                choices.forEach((choice, index) => {
+                    const choiceLetter = String.fromCharCode(65 + index); // 0='A', 1='B', etc.
+                    if (choiceLetter === correctLetter) {
+                        choice.correct = true;
+                    }
+                });
                 
-                // Try to find points (column H or index 7)
-                const points = parseInt(q[keys[7]] || '1') || 1;
+                // Get points
+                const points = parseInt(q['points'] || '1') || 1;
                 
                 // Shuffle choices
                 choices.sort(() => Math.random() - 0.5);
