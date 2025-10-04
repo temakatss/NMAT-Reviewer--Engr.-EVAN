@@ -429,31 +429,22 @@
                 // Use exact column names from your sheet
                 const questionText = q['Question'] || '';
                 
-                // Get correct answer FIRST (should be 'A', 'B', 'C', or 'D')
-                const correctLetter = (q['Ans'] || '').toString().toUpperCase().trim();
+                // Get correct answer - it's the FULL TEXT, not a letter!
+                const correctAnswerText = (q['Ans'] || '').toString().trim();
                 
                 console.log('Question:', questionText);
-                console.log('Correct Letter from sheet:', correctLetter);
+                console.log('Correct Answer Text from sheet:', correctAnswerText);
                 console.log('A:', q['A']);
                 console.log('B:', q['B']);
                 console.log('C:', q['C']);
                 console.log('D:', q['D']);
                 
-                // Get the actual text of the correct answer based on the letter
-                let correctAnswerText = '';
-                if (correctLetter === 'A') correctAnswerText = q['A'] || '';
-                else if (correctLetter === 'B') correctAnswerText = q['B'] || '';
-                else if (correctLetter === 'C') correctAnswerText = q['C'] || '';
-                else if (correctLetter === 'D') correctAnswerText = q['D'] || '';
-                
-                console.log('Correct Answer Text:', correctAnswerText);
-                
-                // Create all four choices with the correct answer marked by TEXT not position
+                // Create all four choices and compare with the correct answer text
                 const choices = [
-                    { text: (q['A'] || '').trim(), correct: ((q['A'] || '').trim() === correctAnswerText.trim()) },
-                    { text: (q['B'] || '').trim(), correct: ((q['B'] || '').trim() === correctAnswerText.trim()) },
-                    { text: (q['C'] || '').trim(), correct: ((q['C'] || '').trim() === correctAnswerText.trim()) },
-                    { text: (q['D'] || '').trim(), correct: ((q['D'] || '').trim() === correctAnswerText.trim()) }
+                    { text: (q['A'] || '').trim(), correct: ((q['A'] || '').trim().toLowerCase() === correctAnswerText.toLowerCase()) },
+                    { text: (q['B'] || '').trim(), correct: ((q['B'] || '').trim().toLowerCase() === correctAnswerText.toLowerCase()) },
+                    { text: (q['C'] || '').trim(), correct: ((q['C'] || '').trim().toLowerCase() === correctAnswerText.toLowerCase()) },
+                    { text: (q['D'] || '').trim(), correct: ((q['D'] || '').trim().toLowerCase() === correctAnswerText.toLowerCase()) }
                 ].filter(c => c.text !== '');
                 
                 console.log('Choices before shuffle:', choices);
