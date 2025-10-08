@@ -189,6 +189,8 @@
             border-radius: 10px;
             font-size: 14px;
             font-weight: 500;
+            white-space: pre-line;
+            line-height: 1.6;
         }
 
         .feedback.correct {
@@ -358,11 +360,9 @@
             
             // Your subject sheets
             const sheets = [
-    { name: 'Physics', gid: '0' },
-    { name: 'Chemistry', gid: '1799494656' },
-    { name: 'Biology', gid: '203143951' },
-    { name: 'Social Sciences', gid: '767750796' }
-];   
+                { name: 'Physics', gid: '0' },
+                { name: 'Chemistry', gid: '1799494656' }
+            ];
             
             sheets.forEach(sheet => {
                 const option = document.createElement('option');
@@ -434,8 +434,12 @@
                 // Get correct answer - it's the FULL TEXT, not a letter!
                 const correctAnswerText = (q['Ans'] || '').toString().trim();
                 
+                // Get explanation
+                const explanation = (q['Explanation'] || '').toString().trim();
+                
                 console.log('Question:', questionText);
                 console.log('Correct Answer Text from sheet:', correctAnswerText);
+                console.log('Explanation:', explanation);
                 console.log('A:', q['A']);
                 console.log('B:', q['B']);
                 console.log('C:', q['C']);
@@ -467,7 +471,8 @@
                     answered: false,
                     selectedIndex: null,
                     isCorrect: false,
-                    correctAnswerText: correctAnswerText
+                    correctAnswerText: correctAnswerText,
+                    explanation: explanation
                 };
             });
             
@@ -560,11 +565,19 @@
             feedback.classList.remove('hidden');
             if (question.isCorrect) {
                 feedback.className = 'feedback correct';
-                feedback.textContent = '✓ Correct! Well done!';
+                let feedbackText = '✓ Correct! Well done!';
+                if (question.explanation) {
+                    feedbackText += '\n\n💡 ' + question.explanation;
+                }
+                feedback.textContent = feedbackText;
             } else {
                 feedback.className = 'feedback incorrect';
                 const correctChoice = question.choices.find(c => c.correct);
-                feedback.textContent = `✗ Incorrect. The correct answer is: ${correctChoice ? correctChoice.text : 'N/A'}`;
+                let feedbackText = `✗ Incorrect. The correct answer is: ${correctChoice ? correctChoice.text : 'N/A'}`;
+                if (question.explanation) {
+                    feedbackText += '\n\n💡 ' + question.explanation;
+                }
+                feedback.textContent = feedbackText;
             }
             
             const submitBtn = document.getElementById('submitBtn');
