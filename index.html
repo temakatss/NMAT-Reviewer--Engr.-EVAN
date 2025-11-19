@@ -267,6 +267,18 @@
             background: linear-gradient(90deg, #26a69a 0%, #00897b 100%);
             transition: width 0.3s;
         }
+
+        .version {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            font-size: 10px;
+            color: #9CA3AF;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
     </style>
 </head>
 <body>
@@ -329,6 +341,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Version Number -->
+    <div class="version">v1.2.0</div>
 
     <script>
         const SHEET_ID = '1WkNC4EPkk-7yalpMXCsDdcy5Upa2I_IuDPEfpetjfUQ';
@@ -427,8 +442,8 @@
                 throw new Error(`Only ${allQuestions.length} questions available`);
             }
             
-            // Shuffle and select questions
-            const shuffled = allQuestions.sort(() => Math.random() - 0.5);
+            // Shuffle and select questions using Fisher-Yates algorithm for true randomization
+            const shuffled = shuffleArray(allQuestions);
             currentQuiz = shuffled.slice(0, numQuestions).map(q => {
                 // Debug: log all keys to see what column names we have
                 console.log('Available columns:', Object.keys(q));
@@ -460,13 +475,14 @@
                 console.log('E:', choiceE);
                 
                 // Create all FIVE choices (A-E) and compare with the correct answer text
+                // Filter out empty choices and those that are just "-" or similar placeholders
                 const choices = [
                     { text: choiceA, correct: (choiceA.toLowerCase() === correctAnswerText.toLowerCase()) },
                     { text: choiceB, correct: (choiceB.toLowerCase() === correctAnswerText.toLowerCase()) },
                     { text: choiceC, correct: (choiceC.toLowerCase() === correctAnswerText.toLowerCase()) },
                     { text: choiceD, correct: (choiceD.toLowerCase() === correctAnswerText.toLowerCase()) },
                     { text: choiceE, correct: (choiceE.toLowerCase() === correctAnswerText.toLowerCase()) }
-                ].filter(c => c.text !== '');
+                ].filter(c => c.text !== '' && c.text !== '-' && c.text !== '--' && c.text !== 'N/A');
                 
                 console.log('Choices before shuffle:', choices);
                 
