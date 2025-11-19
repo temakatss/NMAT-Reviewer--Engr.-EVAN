@@ -430,37 +430,48 @@
             // Shuffle and select questions
             const shuffled = allQuestions.sort(() => Math.random() - 0.5);
             currentQuiz = shuffled.slice(0, numQuestions).map(q => {
+                // Debug: log all keys to see what column names we have
+                console.log('Available columns:', Object.keys(q));
+                
                 // Use exact column names from your sheet
                 const questionText = q['Question'] || '';
                 
-                // Get correct answer - it's the FULL TEXT, not a letter!
-                const correctAnswerText = (q['Ans'] || '').toString().trim();
+                // Get correct answer - could be in 'Ans' or 'Answer' column
+                const correctAnswerText = (q['Ans'] || q['Answer'] || '').toString().trim();
                 
-                // Get explanation
+                // Get explanation - could be in 'Explanation' or other column
                 const explanation = (q['Explanation'] || '').toString().trim();
                 
                 console.log('Question:', questionText);
                 console.log('Correct Answer Text from sheet:', correctAnswerText);
                 console.log('Explanation:', explanation);
-                console.log('A:', q['A']);
-                console.log('B:', q['B']);
-                console.log('C:', q['C']);
-                console.log('D:', q['D']);
-                console.log('E:', q['E']);
+                
+                // Get choices - they might be named A,B,C,D,E or with different names
+                const choiceA = (q['A'] || q['Choice A'] || '').trim();
+                const choiceB = (q['B'] || q['Choice B'] || '').trim();
+                const choiceC = (q['C'] || q['Choice C'] || '').trim();
+                const choiceD = (q['D'] || q['Choice D'] || '').trim();
+                const choiceE = (q['E'] || q['Choice E'] || '').trim();
+                
+                console.log('A:', choiceA);
+                console.log('B:', choiceB);
+                console.log('C:', choiceC);
+                console.log('D:', choiceD);
+                console.log('E:', choiceE);
                 
                 // Create all FIVE choices (A-E) and compare with the correct answer text
                 const choices = [
-                    { text: (q['A'] || '').trim(), correct: ((q['A'] || '').trim().toLowerCase() === correctAnswerText.toLowerCase()) },
-                    { text: (q['B'] || '').trim(), correct: ((q['B'] || '').trim().toLowerCase() === correctAnswerText.toLowerCase()) },
-                    { text: (q['C'] || '').trim(), correct: ((q['C'] || '').trim().toLowerCase() === correctAnswerText.toLowerCase()) },
-                    { text: (q['D'] || '').trim(), correct: ((q['D'] || '').trim().toLowerCase() === correctAnswerText.toLowerCase()) },
-                    { text: (q['E'] || '').trim(), correct: ((q['E'] || '').trim().toLowerCase() === correctAnswerText.toLowerCase()) }
+                    { text: choiceA, correct: (choiceA.toLowerCase() === correctAnswerText.toLowerCase()) },
+                    { text: choiceB, correct: (choiceB.toLowerCase() === correctAnswerText.toLowerCase()) },
+                    { text: choiceC, correct: (choiceC.toLowerCase() === correctAnswerText.toLowerCase()) },
+                    { text: choiceD, correct: (choiceD.toLowerCase() === correctAnswerText.toLowerCase()) },
+                    { text: choiceE, correct: (choiceE.toLowerCase() === correctAnswerText.toLowerCase()) }
                 ].filter(c => c.text !== '');
                 
                 console.log('Choices before shuffle:', choices);
                 
-                // Get points
-                const points = parseInt(q['points'] || '1') || 1;
+                // Get points - could be 'points' or 'Points'
+                const points = parseInt(q['points'] || q['Points'] || '1') || 1;
                 
                 // Shuffle choices - the correct flag stays with the text
                 choices.sort(() => Math.random() - 0.5);
