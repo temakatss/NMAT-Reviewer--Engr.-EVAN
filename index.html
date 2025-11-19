@@ -343,7 +343,7 @@
     </div>
 
     <!-- Version Number -->
-    <div class="version">v1.2.0</div>
+    <div class="version">v1.3.0</div>
 
     <script>
         const SHEET_ID = '1WkNC4EPkk-7yalpMXCsDdcy5Upa2I_IuDPEfpetjfUQ';
@@ -354,6 +354,19 @@
         let totalPoints = 0;
         let earnedPoints = 0;
         let selectedAnswer = null;
+
+        // Function to shuffle an array using Fisher-Yates algorithm (true randomization)
+        function shuffleArray(array) {
+            // Create a copy to avoid modifying the original
+            const shuffled = array.slice();
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                // Generate random index from 0 to i
+                const j = Math.floor(Math.random() * (i + 1));
+                // Swap elements at indices i and j
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
 
         // Load available sheets on page load
         window.onload = async function() {
@@ -490,7 +503,7 @@
                 const points = parseInt(q['points'] || q['Points'] || '1') || 1;
                 
                 // Shuffle choices - the correct flag stays with the text
-                choices.sort(() => Math.random() - 0.5);
+                choices = shuffleArray(choices);
                 
                 console.log('Choices after shuffle:', choices);
                 console.log('---');
