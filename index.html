@@ -491,7 +491,7 @@
                 
                 // Create all FIVE choices (A-E) and compare with the correct answer text
                 // Filter out empty choices and those that are just "-" or similar placeholders
-                const choices = [
+                let choices = [
                     { text: choiceA, correct: (choiceA.toLowerCase() === correctAnswerText.toLowerCase()) },
                     { text: choiceB, correct: (choiceB.toLowerCase() === correctAnswerText.toLowerCase()) },
                     { text: choiceC, correct: (choiceC.toLowerCase() === correctAnswerText.toLowerCase()) },
