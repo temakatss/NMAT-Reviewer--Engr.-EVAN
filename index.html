@@ -358,12 +358,14 @@
         // Function to shuffle an array using Fisher-Yates algorithm (true randomization)
         function shuffleArray(array) {
             // Create a copy to avoid modifying the original
-            const shuffled = array.slice();
-            for (let i = shuffled.length - 1; i > 0; i--) {
+            var shuffled = array.slice();
+            for (var i = shuffled.length - 1; i > 0; i--) {
                 // Generate random index from 0 to i
-                const j = Math.floor(Math.random() * (i + 1));
+                var j = Math.floor(Math.random() * (i + 1));
                 // Swap elements at indices i and j
-                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+                var temp = shuffled[i];
+                shuffled[i] = shuffled[j];
+                shuffled[j] = temp;
             }
             return shuffled;
         }
